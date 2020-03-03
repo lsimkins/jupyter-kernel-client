@@ -1,14 +1,13 @@
 {
-  "name": "@lsimkins/jupyter-kernel-client",
-  "version": "0.1.0",
-  "description": "Node client for the jupyter kernel.",
+  "name": "jupyter-kernel-client",
+  "version": "0.1",
+  "description": "Node implementation of the jupyter notebook protocol for kernel clients & kernel management.",
   "main": "index.js",
   "author": "Luke Simkins <luke@bitparadigm.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node dist/index.js",
     "build": "tsc -p .",
-    "build-dev": "yarn clean && yarn build && yarn start",
+    "build-dev": "yarn clean && yarn build",
     "watch": "yarn run build-dev -- -w",
     "test": "jest --coverage",
     "tdd": "jest --watch",
@@ -20,46 +19,64 @@
   },
   "dependencies": {
     "@types/jest": "^24.0.11",
-    "@types/lodash": "^4.14.149",
     "@types/nock": "^9.3.1",
     "@types/request": "^2.48.1",
     "@types/request-promise-native": "^1.0.15",
-    "@types/uuid": "^7.0.0",
     "@types/ws": "^6.0.1",
     "@types/zeromq": "^4.6.2",
-    "dotenv": "^8.2.0",
     "jest": "^24.7.1",
-    "lodash": "^4.17.15",
     "module-alias": "^2.2.0",
     "nock": "^10.0.6",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
     "ts-jest": "^24.0.2",
     "typescript": "^3.4.3",
-    "uuid": "^7.0.1",
     "ws": "^6.2.1",
     "zeromq": "^5.1.0"
   },
   "devDependencies": {
-    "@types/mock-fs": "^4.10.0",
-    "mock-fs": "^4.11.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-eslint-rules": "^5.4.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/lsimkins/jupyter-kernel-client.git"
-  },
-  "bugs": {
-    "url": "https://github.com/lsimkins/jupyter-kernel-client/issues"
-  },
-  "homepage": "https://github.com/lsimkins/jupyter-kernel-client#readme",
-  "keywords": [
-    "jupyter",
-    "kernel",
-    "client"
-  ],
   "_moduleAliases": {
     "@lib": "dist/lib"
+  },
+  "jest": {
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
+    "transform": {
+      "^.+\\.(ts|js|html)$": "<rootDir>/node_modules/ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "html"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 0,
+        "branches": 0,
+        "functions": 0,
+        "lines": 0
+      }
+    },
+    "coverageReporters": [
+      "json-summary",
+      "text",
+      "html"
+    ],
+    "moduleNameMapper": {
+      "^@lib/(.*)$": "<rootDir>/src/lib/$1"
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ]
   }
 }

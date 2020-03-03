@@ -1,6 +1,12 @@
 import request, { RequestPromise } from 'request-promise-native';
 import url from 'url';
 import WebSocket from 'ws';
+import { KernelRuntimeConfig } from './KernelRuntimeConfig';
+import fs from 'fs';
+import { join } from 'path';
+import { promisify } from 'util';
+
+const readFile = promisify(fs.readFile);
 
 export type KernelModel = {
   id: string;
@@ -15,12 +21,18 @@ export type KernelAPIError = {
   reason: string | null;
 };
 
+export type KernelManagerConfig = {
+  juptyerUrl: string;
+  kernelConnPath: string;
+  token?: string;
+};
+
 export default class KernelManager {
-  private kernelsPath = '/api/kernels'
+  private kernelApiPath = '/api/kernels'
   private host: string | null;
 
-  constructor(private juptyerUrl: string, private token?: string) {
-    this.host = url.parse(juptyerUrl).host;
+  constructor(private config: KernelManagerConfig) {
+    this.host = url.parse(config.juptyerUrl).host;
   }
 
   listKernels(): RequestPromise<KernelModel[]> {
@@ -47,21 +59,21 @@ export default class KernelManager {
   }
 
   openWebsocketChannel(kernelId: string): WebSocket {
-    return new WebSocket(`ws://${this.host}/api/kernels/${kernelId}/channels?token=${this.token}`)
+    return new WebSocket(`ws://${this.host}/api/kernels/${kernelId}/channels?token=${this.config.token}`)
   }
 
   private get kernelsUrl() {
-    return url.resolve(this.juptyerUrl, this.kernelsPath);
+    return url.resolve(this.config.juptyerUrl, this.kernelApiPath);
   }
 
   private kernelIdUrl(kernelId: string) {
-    return url.resolve(this.kernelsUrl, `${this.kernelsPath}/${kernelId}`);
+    return url.resolve(this.kernelsUrl, `${this.kernelApiPath}/${kernelId}`);
   }
 
   private get requestHeaders() {
     return {
-      Authorization: `token ${this.token}`
-    }
+      Authorization: `token ${this.config.token}`
+    };
   }
 
   private get<R>(url: string): RequestPromise<R> {
@@ -83,5 +95,17 @@ export default class KernelManager {
         json: true
       }
     );
+  }
+
+  static loadKernelConfig(
+    kernelId: string,
+    kernelConfigFolder: string,
+    createFilename: (kernelId: string) => string = KernelRuntimeConfig.createFilename
+  ): Promise<KernelRuntimeConfig> {
+    return readFile(
+        join(kernelConfigFolder, createFilename(kernelId)),
+        { encoding: 'utf-8' }
+      )
+      .then(KernelRuntimeConfig.parseConfigFile);
   }
 }
