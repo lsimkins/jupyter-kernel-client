@@ -23,7 +23,7 @@ export const KernelRuntimeConfig = {
     'ip',
     'key',
     'transport',
-    'signature_acheme',
+    'signature_scheme',
     'kernel_name',
   ]),
 

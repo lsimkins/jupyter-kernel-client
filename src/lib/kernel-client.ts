@@ -1,5 +1,5 @@
 import zmq, { Socket } from 'zeromq';
-import { KernelRuntimeConfig } from './KernelRuntimeConfig';
+import { KernelRuntimeConfig } from './kernel-runtime-config';
 
 interface ZmqSocket extends Socket {
   closed: boolean;

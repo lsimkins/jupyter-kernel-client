@@ -1,4 +1,4 @@
-import KernelManager from '../lib/KernelManager';
+import KernelManager from '../lib/kernel-manager';
 import nock from 'nock';
 import mockfs from 'mock-fs';
 
@@ -177,7 +177,7 @@ describe('KernelManager', () => {
       key: '8ab5c2e0-31670508ef13209017f73afa',
       transport: 'tcp',
       signature_scheme: 'hmac-sha256',
-      kernel_name: ''
+      kernel_name: 'kernel-name'
     }));
 
     mockfs({
@@ -197,8 +197,8 @@ describe('KernelManager', () => {
           ip: '127.0.0.1',
           key: '8ab5c2e0-31670508ef13209017f73afa',
           transport: 'tcp',
-          signatureAcheme: undefined,
-          kernelName: ''
+          signatureScheme: 'hmac-sha256',
+          kernelName: 'kernel-name'
         });
       })
       .catch(catchError)

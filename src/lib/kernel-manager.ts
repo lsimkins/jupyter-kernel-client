@@ -1,7 +1,7 @@
 import request, { RequestPromise } from 'request-promise-native';
 import url from 'url';
 import WebSocket from 'ws';
-import { KernelRuntimeConfig } from './KernelRuntimeConfig';
+import { KernelRuntimeConfig } from './kernel-runtime-config';
 import fs from 'fs';
 import { join } from 'path';
 import { promisify } from 'util';
