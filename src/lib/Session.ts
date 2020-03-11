@@ -1,5 +1,6 @@
 import { v4 as uuid4 } from 'uuid';
 import os from 'os';
+import { protocolVersion } from '@lib/protocol-version';
 
 export type MsgHeader = {
   msg_id: string;
@@ -38,8 +39,8 @@ export const KernelMessage = {
       msg_type: msgType,
       session,
       date: new Date().toISOString(),
-
-    }
+      version: protocolVersion
+    };
   }
 };
 
