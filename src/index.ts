@@ -20,30 +20,35 @@ if (!process.env.JUPYTER_TOKEN) {
 }
 
 (async function() {
+
   const kConfig = await KernelManager
     .loadKernelConfig(
-      '97a1d86e-6d6b-4b0f-995a-8d11486cdfed',
+      'f1b02a75-6375-44ad-8c1c-04874fac960a',
       connPath
     );
 
   const client = new KernelClient(kConfig);
 
-  client.connect();
+  // client.connect();
+
+  client.iopub.connect();
+  client.iopub.listen(console.debug);
 
   process.on('SIGINT', () => {
     console.info('Closing zeromq connection');
     client.disconnect();
+    client.iopub.disconnect();
   });
 }());
 
-// const manager = new KernelManager({
-//   juptyerUrl: juptyerHost,
-//   kernelConnPath: process.env.KERNEL_CONN_PATH,
-//   token: process.env.JUPYTER_TOKEN
-// });
+const manager = new KernelManager({
+  juptyerUrl: juptyerHost,
+  kernelConnPath: process.env.KERNEL_CONN_PATH,
+  token: process.env.JUPYTER_TOKEN
+});
 
 // manager.startKernel('python3').then(console.debug).catch(console.error);
-// manager.listKernels().then(console.debug).catch(console.error);
+manager.listKernels().then(console.debug).catch(console.error);
 
 
 

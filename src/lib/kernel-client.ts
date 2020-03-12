@@ -1,5 +1,7 @@
 import zmq, { Socket } from 'zeromq';
 import { KernelRuntimeConfig } from './kernel-runtime-config';
+import { IOPubChannel } from './channel';
+import Session from './session';
 
 interface ZmqSocket extends Socket {
   closed: boolean;
@@ -26,8 +28,24 @@ export type KernelMsg<Content={}> = {
 export default class KernelClient {
   private iopubSock?: ZmqSocket;
   private shellSock?: ZmqSocket;
+  private iopubChannel?: IOPubChannel;
+  session: Session;
 
-  constructor(private runtimeConfig: KernelRuntimeConfig) {}
+  constructor(private runtimeConfig: KernelRuntimeConfig) {
+    this.session = new Session({ key: this.runtimeConfig.key });
+  }
+
+  get iopub(): IOPubChannel {
+    if (!this.iopubChannel) {
+      this.iopubChannel = new IOPubChannel({
+        ip: this.runtimeConfig.ip,
+        port: this.runtimeConfig.iopubPort,
+        session: this.session
+      });
+    }
+
+    return this.iopubChannel;
+  }
 
   get ippubSocket(): ZmqSocket {
     if (!this.iopubSock) {
