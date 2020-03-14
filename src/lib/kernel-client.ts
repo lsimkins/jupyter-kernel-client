@@ -23,7 +23,7 @@ export default class KernelClient {
   session: Session;
 
   constructor(private runtimeConfig: KernelRuntimeConfig) {
-    this.session = new Session({ key: this.runtimeConfig.key });
+    this.session = new Session(this.runtimeConfig);
   }
 
   get iopub(): IOPubChannel {
@@ -51,6 +51,19 @@ export default class KernelClient {
     return this.shellChannel;
   }
 
+  executeCode(code: string, userExpressions: any = {}, silent: boolean = true) {
+    const msg = this.session.createMsg('execute_request', {code, user_expressions: userExpressions, silent});
+
+    this.shell.socket.send(msg);
+
+    this.shell.socket.receive().then(res => {
+      const result = this.session.unpack(...res);
+
+      console.debug(result);
+      console.debug((result.content as any).user_expressions);
+    });
+  }
+
   get stdinAddress(): string {
     const { transport, ip, stdinPort } = this.runtimeConfig;
 
@@ -59,9 +72,11 @@ export default class KernelClient {
 
   connect() {
     this.iopub.connect();
+    this.shell.connect();
   }
 
   disconnect() {
     this.iopub.disconnect();
+    this.shell.disconnect();
   }
 }

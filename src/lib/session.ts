@@ -1,11 +1,13 @@
 import { v4 as uuid4 } from 'uuid';
 import os from 'os';
-import { KernelMessage } from '@lib/kernel-message';
+import { KernelMessage, MsgHeader, UnsignedKernelMessage } from '@lib/kernel-message';
+import crypto from 'crypto';
 
 export type SessionConfig = {
   sessionId?: string;
   username?: string;
   key: string;
+  signatureScheme: string;
 }
 
 export default class Session {
@@ -13,28 +15,62 @@ export default class Session {
   private username: string;
   private key: string;
   private msgCount: number;
+  private hmacAlg: string;
 
   constructor(config: SessionConfig) {
     this.sessionId = config.sessionId || uuid4();
     this.username = config.username || os.userInfo().username;
     this.key = config.key;
     this.msgCount = 0;
+
+    const [_, alg] = config.signatureScheme.split('hmac-');
+
+    if (!alg) {
+      throw `Unknown signature scheme: ${config.signatureScheme}`;
+    }
+
+    this.hmacAlg = alg;
   }
 
   createMsgId() {
     return `${this.sessionId}_${++this.msgCount}`;
   }
 
-  pack<ContentType={}>(msg: KernelMessage<ContentType>): Buffer[] {
+  createMsg<ContentType={}>(msgType: string, content: ContentType, parentHeader: MsgHeader | {} = {}) {
+    const msgId = this.createMsgId();
+    const delimiter = KernelMessage.standardDelimiter;
+    const header = KernelMessage.createHeader(msgId, msgType, this.username, this.sessionId);
+
+    return this.pack({
+      identity: `client.${this.sessionId}.${msgType}`,
+      delimiter,
+      header,
+      parent_header: parentHeader,
+      metadata: {},
+      content
+    });
+  }
+
+  sign<ContentType={}>(msg: UnsignedKernelMessage<ContentType>): string {
+    const hash = crypto.createHmac(this.hmacAlg, this.key);
+
+    [msg.header, msg.parent_header, msg.metadata, msg.content].forEach(
+      p => hash.update(JSON.stringify(p))
+    );
+
+    return hash.digest('hex');
+  }
+
+  pack<ContentType={}>(msg: UnsignedKernelMessage<ContentType>): Buffer[] {
     return [
       msg.identity,
       msg.delimiter,
-      msg.signature,
+      this.sign(msg),
       JSON.stringify(msg.header),
       JSON.stringify(msg.parent_header),
       JSON.stringify(msg.metadata),
-      JSON.stringify(msg.content)
-    ].map(part => new Buffer(part, 'utf-8'));
+      JSON.stringify(msg.content),
+    ].map(part => Buffer.from(part, 'utf-8'));
   }
 
   unpack<ContentType={}>(...msgs: Buffer[]): KernelMessage<ContentType> {

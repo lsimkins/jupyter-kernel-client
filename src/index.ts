@@ -2,7 +2,6 @@ require('module-alias/register');
 
 import KernelManager from '@lib/kernel-manager';
 import KernelClient from '@lib/kernel-client';
-import { KernelRuntimeConfig } from '@lib/kernel-runtime-config';
 
 // DEV
 require('dotenv').config();
@@ -29,21 +28,26 @@ if (!process.env.JUPYTER_TOKEN) {
   const client = new KernelClient(kConfig);
   client.connect();
 
-
   // client.iopub.listen(console.debug);
 
   const cleanup = () => {
     client.disconnect();
   }
 
+  // for await (const msg of client.iopub) {
+  //   console.debug(msg);
+  // }
+
+  client.executeCode(
+    'test = 1',
+    { test: 'test' },
+    false
+  );
+
   process.on('SIGINT', cleanup);
   process.on('SIGUSR1', cleanup);
   process.on('SIGUSR2', cleanup);
   process.on('exit', cleanup);
-
-  for await (const msg of client.iopub) {
-    console.debug(msg);
-  }
 }());
 
 const manager = new KernelManager({

@@ -52,8 +52,6 @@ type IOPubChannelCallback = (msg: KernelMessage<{}>) => void;
 
 
 export class IOPubChannel extends Channel<zmq.Subscriber> {
-  private listenerMap: Map<IOPubChannelCallback,  (...args: any[]) => void> = new Map();
-
   constructor(config: ChannelConfig) {
     super({...config}, new zmq.Subscriber);
   }
@@ -63,26 +61,6 @@ export class IOPubChannel extends Channel<zmq.Subscriber> {
       yield this.session.unpack(...msg);
     }
   }
-
-  // listen(cb: (msg: KernelMessage<{}>) => void) {
-  //   this.socket.subscribe('');
-  //   const unpackedCb = (...msgs: Buffer[]) => {
-  //     const msg = this.session.unpack(...msgs);
-  //     cb(msg);
-  //   };
-  //   this.socket.on('message', unpackedCb);
-
-  //   this.listenerMap.set(cb, unpackedCb);
-  // }
-
-  // unlisten(cb: (msg: KernelMessage<{}>) => void) {
-  //   const unpackedCb = this.listenerMap.get(cb);
-
-  //   if (unpackedCb) {
-  //     this.socket.off('message', unpackedCb);
-  //     this.listenerMap.delete(unpackedCb);
-  //   }
-  // }
 }
 
 export class ShellChannel extends Channel<zmq.Dealer> {
