@@ -1,44 +1,23 @@
-import zmq, { Socket } from 'zeromq';
-import { assign } from 'lodash';
-import Session, { KernelMessage } from './session';
+import * as zmq from 'zeromq';
+import Session from './session';
+import { KernelMessage } from './kernel-message';
 
-interface ZmqSocket extends Socket {
-  closed: boolean;
-}
-
-type ZmqSocketType =
-  'pub' |
-  'xpub' |
-  'sub' |
-  'xsub' |
-  'req' |
-  'xreq' |
-  'rep' |
-  'xrep' |
-  'push' |
-  'pull' |
-  'dealer' |
-  'router' |
-  'pair' |
-  'stream'
 
 export type ChannelConfig = {
-  type: ZmqSocketType,
   ip: string,
   port: number,
   session: Session
 };
 
-export class Channel {
+export class Channel<S extends zmq.Socket> {
   private transport = 'tcp';
-  private zmqSocket?: ZmqSocket;
-  private type: ZmqSocketType;
+  private sock: S;
   private ip: string;
   private port: number;
   session: Session;
 
-  constructor(config: ChannelConfig) {
-    this.type = config.type;
+  constructor(config: ChannelConfig, socket: S) {
+    this.sock = socket;
     this.ip = config.ip;
     this.port = config.port;
     this.session = config.session;
@@ -49,67 +28,65 @@ export class Channel {
   }
 
   get socket() {
-    if (!this.zmqSocket) {
-      this.zmqSocket = zmq.socket(this.type) as ZmqSocket;
-    }
-
-    return this.zmqSocket;
+    return this.sock;
   }
 
   connect() {
-    this.socket.connect(this.address);
+    return this.sock.connect(this.address);
   }
 
   disconnect() {
-    if (this.zmqSocket) {
-      this.zmqSocket.disconnect(this.address);
-    }
+    return this.sock.disconnect(this.address);
+  }
+
+  bind(): Promise<void> {
+    return this.sock.bind(this.address);
+  }
+
+  unbind(): Promise<void> {
+    return this.sock.unbind(this.address);
   }
 }
-
-export interface IOPubChannelConfig {
-  ip: string;
-  port: number;
-  session: Session;
-  filter?: string;
-};
-
-const defaultIOPubChannelConfig = {
-  filter: ''
-};
 
 type IOPubChannelCallback = (msg: KernelMessage<{}>) => void;
 
 
-export class IOPubChannel extends Channel {
+export class IOPubChannel extends Channel<zmq.Subscriber> {
   private listenerMap: Map<IOPubChannelCallback,  (...args: any[]) => void> = new Map();
 
-  constructor(config: IOPubChannelConfig) {
-    super({
-      ...defaultIOPubChannelConfig,
-      ...config,
-      type: 'sub'
-    });
+  constructor(config: ChannelConfig) {
+    super({...config}, new zmq.Subscriber);
   }
 
-  listen(cb: (msg: KernelMessage<{}>) => void) {
-    this.socket.subscribe('');
-    const unpackedCb = (...msgs: Buffer[]) => {
-      console.debug('I was called');
-      const msg = this.session.unpack(...msgs);
-      cb(msg);
-    };
-    this.socket.on('message', unpackedCb);
-
-    this.listenerMap.set(cb, unpackedCb);
-  }
-
-  unlisten(cb: (msg: KernelMessage<{}>) => void) {
-    const unpackedCb = this.listenerMap.get(cb);
-
-    if (unpackedCb) {
-      this.socket.off('message', unpackedCb);
-      this.listenerMap.delete(unpackedCb);
+  async* [Symbol.asyncIterator](): AsyncIterator<KernelMessage> {
+    for await (const msg of this.socket) {
+      yield this.session.unpack(...msg);
     }
+  }
+
+  // listen(cb: (msg: KernelMessage<{}>) => void) {
+  //   this.socket.subscribe('');
+  //   const unpackedCb = (...msgs: Buffer[]) => {
+  //     const msg = this.session.unpack(...msgs);
+  //     cb(msg);
+  //   };
+  //   this.socket.on('message', unpackedCb);
+
+  //   this.listenerMap.set(cb, unpackedCb);
+  // }
+
+  // unlisten(cb: (msg: KernelMessage<{}>) => void) {
+  //   const unpackedCb = this.listenerMap.get(cb);
+
+  //   if (unpackedCb) {
+  //     this.socket.off('message', unpackedCb);
+  //     this.listenerMap.delete(unpackedCb);
+  //   }
+  // }
+}
+
+export class ShellChannel extends Channel<zmq.Dealer> {
+  constructor(config: Omit<ChannelConfig, 'socket'>) {
+    super({ ...config }, new zmq.Dealer);
   }
 }

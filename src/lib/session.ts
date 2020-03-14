@@ -1,48 +1,12 @@
 import { v4 as uuid4 } from 'uuid';
 import os from 'os';
-import { protocolVersion } from '@lib/protocol-version';
-
-export type MsgHeader = {
-  msg_id: string;
-  username: string;
-  date: string;
-  msg_type: string;
-  version: string;
-  session: string;
-}
-
-export interface KernelBaseMessage {
-  identity: string;
-  delimiter: string;
-  signature: string;
-  header: MsgHeader;
-  parent_header: MsgHeader;
-  metadata: {};
-}
-
-export interface KernelMessage<Content={}> extends KernelBaseMessage {
-  content: Content;
-};
+import { KernelMessage } from '@lib/kernel-message';
 
 export type SessionConfig = {
   sessionId?: string;
   username?: string;
   key: string;
 }
-
-export const KernelMessage = {
-  standardDelimiter: "<IDS|MSG>",
-  createHeader: function(msgId: string, msgType: string, username: string, session: string) {
-    return {
-      msg_id: msgId,
-      username,
-      msg_type: msgType,
-      session,
-      date: new Date().toISOString(),
-      version: protocolVersion
-    };
-  }
-};
 
 export default class Session {
   private sessionId: string;
