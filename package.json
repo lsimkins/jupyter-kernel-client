@@ -12,7 +12,7 @@
     "build-dev": "yarn clean && yarn build",
     "watch": "yarn run build-dev -- -w",
     "test": "jest --coverage",
-    "tdd": "jest --watch",
+    "tdd": "DEBUG=jest jest --watch",
     "clean": "rm -rf ./dist",
     "lint": "tslint -p tsconfig.json --exclude 'node_modules/**/*' --exclude 'web/*'",
     "typecheck": "npm run build -- --noEmit",

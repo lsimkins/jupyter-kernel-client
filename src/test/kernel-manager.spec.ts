@@ -1,6 +1,7 @@
 import KernelManager from '../lib/kernel-manager';
-import nock from 'nock';
+import nock, { isDone } from 'nock';
 import mockfs from 'mock-fs';
+import console from './mocks/console';
 
 describe('KernelManager', () => {
   const mockHost = 'http://notebook-server';
@@ -71,65 +72,59 @@ describe('KernelManager', () => {
     mockfs.restore();
   });
 
-  it('should GET /api/kernels, returning a list of kernel models', async () => {
+  it('should GET /api/kernels, returning a list of kernel models', async done => {
     const manager = new KernelManager(mockConfig);
     const kernels = await manager.listKernels();
 
     expect(kernels).toEqual([kernelModel]);
+    done()
   });
 
-  it('should GET /api/kernels/<kernel_id>, returning a single kernel models', async () => {
+  it('should GET /api/kernels/<kernel_id>, returning a single kernel models', async done => {
     const manager = new KernelManager(mockConfig);
     const kernels = await manager.getKernel(kernelId);
 
     expect(kernels).toEqual(kernelModel);
+    done()
   });
 
-  it('should POST /api/kernels/<kernel_id>, starting a kernel with the specified spec', async () => {
+  it('should POST /api/kernels/<kernel_id>, starting a kernel with the specified spec', async done => {
     const manager = new KernelManager(mockConfig);
     const kernels = await manager.startKernel('python3');
 
     expect(kernels).toEqual(newKernelModel);
+    done()
   });
 
-  it('should DELETE /api/kernels/<kernel_id>, shutting down/deleting a kernel with the specified spec', async () => {
+  it('should DELETE /api/kernels/<kernel_id>, shutting down/deleting a kernel with the specified spec', async done => {
     const manager = new KernelManager(mockConfig);
     const kernels = await manager.startKernel('python3');
 
     expect(kernels).toEqual(newKernelModel);
+    done()
   });
 
-  it('should POST /api/kernels/<kernel_id>/restart, restarting a kernel', async () => {
+  it('should POST /api/kernels/<kernel_id>/restart, restarting a kernel', async done => {
     const manager = new KernelManager(mockConfig);
     const restartedKernel = await manager.restartKernel(kernelId);
 
     expect(restartedKernel).toEqual(kernelModel);
+    done()
   });
 
-  it('should POST /api/kernels/<kernel_id>/interrupt, interrupting a kernel', async () => {
+  it('should POST /api/kernels/<kernel_id>/interrupt, interrupting a kernel', async done => {
     const manager = new KernelManager(mockConfig);
     const response = await manager.interruptKernel(kernelId);
 
     expect(response).toEqual(undefined);
+    done()
   });
 
-  // it('should open a websocket channel', async () => {
-  //   nock.cleanAll()
-  //   const manager = new KernelManager(realConfig);
-  //   const websocket = manager.openWebsocketChannel('85ca8102-9ed9-49b2-9232-24299e582e65');
-
-  //   websocket.on('open', console.debug);
-
-  //   setTimeout(() => {
-  //     expect(true).toEqual(true);
-  //   }, 4000);
-  // });
-
-  it('should load a kernel config file', async () => {
+  it('should load a kernel config file', async (done) => {
     const kernelId = '123-kernel-id';
     const kernelFolder = '/path/to/kernel/folder/';
     const kernelFile = `kernel-${kernelId}.json`;
-    const configFile = new Buffer(JSON.stringify({
+    const configFile = Buffer.from(JSON.stringify({
       shell_port: 59488,
       iopub_port: 59489,
       stdin_port: 59490,
@@ -148,27 +143,28 @@ describe('KernelManager', () => {
 
     KernelManager.loadKernelConfig(kernelId, kernelFolder)
       .then(result => {
-        expect(result).toEqual({
-          shellPort: 59488,
-          iopubPort: 59489,
-          stdinPort: 59490,
-          controlPort: 59491,
-          hbPort: 59492,
-          ip: '127.0.0.1',
-          key: '8ab5c2e0-31670508ef13209017f73afa',
-          transport: 'tcp',
-          signatureAcheme: undefined,
-          kernelName: ''
-        });
-      })
-      .catch(fail);
+          expect(result).toEqual({
+            shellPort: 59488,
+            iopubPort: 59489,
+            stdinPort: 59490,
+            controlPort: 59491,
+            hbPort: 59492,
+            ip: '127.0.0.1',
+            key: '8ab5c2e0-31670508ef13209017f73afa',
+            transport: 'tcp',
+            signatureScheme: 'hmac-sha256',
+            kernelName: ''
+          });
+          done();
+        })
+        .catch(fail);
   });
 
-  it('should throw an exception when loading an invalid config file', async () => {
+  it('should throw an exception when loading an invalid config file', async done => {
     const kernelId = '123-kernel-id';
     const kernelFolder = '/path/to/kernel/folder/';
     const kernelFile = `kernel-${kernelId}.json`;
-    const configFile = new Buffer(JSON.stringify({
+    const configFile = Buffer.from(JSON.stringify({
       shell_port: 59488,
       iopub_port: 59489,
       stdin_port: 59490,
@@ -186,23 +182,13 @@ describe('KernelManager', () => {
 
     const catchError = jest.fn();
 
-    KernelManager.loadKernelConfig(kernelId, kernelFolder)
-      .then(result => {
-        expect(result).toEqual({
-          shellPort: 59488,
-          iopubPort: 59489,
-          stdinPort: 59490,
-          controlPort: 59491,
-          hbPort: 59492,
-          ip: '127.0.0.1',
-          key: '8ab5c2e0-31670508ef13209017f73afa',
-          transport: 'tcp',
-          signatureScheme: 'hmac-sha256',
-          kernelName: 'kernel-name'
-        });
-      })
+    KernelManager.loadKernelConfig('invalid_id', kernelFolder)
+      .then(fail)
       .catch(catchError)
-      .finally(() => expect(catchError).toHaveBeenCalled());
+      .finally(() => {
+        expect(catchError).toHaveBeenCalled();
+        done()
+      });
   });
 });
 
