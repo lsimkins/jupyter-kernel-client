@@ -42,6 +42,15 @@ export default class Session {
     const delimiter = KernelMessage.standardDelimiter;
     const header = KernelMessage.createHeader(msgId, msgType, this.username, this.sessionId);
 
+    console.debug({
+      identity: `client.${this.sessionId}.${msgType}`,
+      delimiter,
+      header,
+      parent_header: parentHeader,
+      metadata: {},
+      content
+    });
+
     return this.pack({
       identity: `client.${this.sessionId}.${msgType}`,
       delimiter,

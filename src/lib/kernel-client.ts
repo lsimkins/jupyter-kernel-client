@@ -62,6 +62,8 @@ export default class KernelClient {
       {code, user_expressions: userExpressions, silent}
     );
 
+    console.debug(msg);
+
     this.shell.socket.send(msg);
 
     return this.shell.socket.receive().then(res => {

@@ -21,7 +21,7 @@ if (!process.env.JUPYTER_TOKEN) {
 (async function() {
   const kConfig = await KernelManager
     .loadKernelConfig(
-      'c881c0ad-e87b-4930-b69a-233108aed9c7',
+      'cecafd21-20d8-4210-ba9c-a3ecc7e12e0c',
       connPath
     );
 
@@ -39,10 +39,10 @@ if (!process.env.JUPYTER_TOKEN) {
   // }
 
   client.executeCode(
-    'test = 1',
-    { test: 'test' },
-    false
-  );
+    '',
+    { test: 'test + 1' },
+    true
+  ).then(console.debug);
 
   process.on('SIGINT', cleanup);
   process.on('SIGUSR1', cleanup);
