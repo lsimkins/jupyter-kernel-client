@@ -24,6 +24,29 @@ export interface KernelMessage<Content={}> extends KernelBaseMessage {
 
 export type UnsignedKernelMessage<Content={}> = Omit<KernelMessage<Content>, 'signature'>;
 
+export type ExecuteCodeResult = {
+  status: 'ok' | 'error' | 'aborted',
+  execution_count: number,
+  userExpressions: {
+    [key: string]: UserExpressionSuccess | UserExpressionError
+  }
+};
+
+export type UserExpressionSuccess = {
+  status: 'ok' | 'error' | 'aborted',
+  data: {
+    [contentType: string]: string
+  },
+  metadata: any
+};
+
+export type UserExpressionError = {
+  status: 'ok' | 'error' | 'aborted',
+  ename: string,
+  evalue: string,
+  traceback: string[]
+};
+
 export const KernelMessage = {
   standardDelimiter: "<IDS|MSG>",
   createHeader: function(msgId: string, msgType: string, username: string, sessionId: string): MsgHeader {

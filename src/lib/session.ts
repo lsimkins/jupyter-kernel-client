@@ -8,14 +8,15 @@ export type SessionConfig = {
   username?: string;
   key: string;
   signatureScheme: string;
-}
+};
 
 export default class Session {
-  private sessionId: string;
-  private username: string;
-  private key: string;
+  readonly sessionId: string;
+  readonly username: string;
+  readonly key: string;
+  readonly hmacAlg: string;
+
   private msgCount: number;
-  private hmacAlg: string;
 
   constructor(config: SessionConfig) {
     this.sessionId = config.sessionId || uuid4();
@@ -26,7 +27,7 @@ export default class Session {
     const [_, alg] = config.signatureScheme.split('hmac-');
 
     if (!alg) {
-      throw `Unknown signature scheme: ${config.signatureScheme}`;
+      throw `Unknown signature scheme: ${config.signatureScheme}. Scheme must be in format "hmac-[algorithm]. E.g. "hmac-sha256"`;
     }
 
     this.hmacAlg = alg;
@@ -85,5 +86,9 @@ export default class Session {
       metadata: JSON.parse(metadata),
       content: JSON.parse(content)
     };
+  }
+
+  static create(config: SessionConfig) {
+    return new Session(config);
   }
 }
