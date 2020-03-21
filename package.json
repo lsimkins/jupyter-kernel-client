@@ -32,17 +32,17 @@
     "lodash": "^4.17.15",
     "module-alias": "^2.2.0",
     "nock": "^10.0.6",
-    "nodemon": "^2.0.2",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7",
     "ts-jest": "^24.0.2",
     "typescript": "^3.4.3",
     "uuid": "^7.0.1",
     "ws": "^6.2.1",
-    "zeromq": "6.0.0-beta.6"
+    "zeromq": "6.0.0-beta.5"
   },
   "devDependencies": {
     "@types/mock-fs": "^4.10.0",
+    "nodemon": "^2.0.2",
     "mock-fs": "^4.11.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-eslint-rules": "^5.4.0"
