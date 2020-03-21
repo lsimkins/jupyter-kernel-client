@@ -4,21 +4,7 @@ import { IOPubChannel, ShellChannel } from './channel';
 import Session from './session';
 import { KernelMessage, ExecuteCodeResult } from './kernel-message';
 
-interface ZmqSocket extends Socket {
-  closed: boolean;
-}
-
-export type MsgHeader = {
-  msg_id: string;
-  username: string;
-  date: string;
-  msg_type: string;
-  version: string;
-}
-
 export default class KernelClient {
-  private iopubSock?: ZmqSocket;
-  private shellSock?: ZmqSocket;
   private iopubChannel?: IOPubChannel;
   private shellChannel?: ShellChannel;
   session: Session;
@@ -61,8 +47,6 @@ export default class KernelClient {
       'execute_request',
       {code, user_expressions: userExpressions, silent}
     );
-
-    console.debug(msg);
 
     this.shell.socket.send(msg);
 

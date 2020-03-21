@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "start": "node dist/index.js",
-    "start-dev": "nodemon --delay 500ms",
+    "start-dev": "nodemon --delay 500ms dist/index-dev.js",
     "build": "tsc -p .",
     "build-dev": "yarn clean && yarn build",
     "watch": "yarn run build-dev -- -w",
